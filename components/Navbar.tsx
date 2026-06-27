@@ -80,8 +80,8 @@ export default function Navbar() {
             onClick={handleClick}
           >
             <Avatar
-              alt={session?.user?.name}
-              src={session?.user?.image}
+              alt={session?.user?.name?? undefined}
+              src={session?.user?.image ?? undefined}
               onClick={() => {}}
             />
           </button>

@@ -128,7 +128,7 @@ redirect("/auth/signin")
         <div style={styles.profileHeader}>
           <Avatar
             className="z-1"
-            src={user.image}
+            src={user.image??undefined}
             alt={user.name}
             style={styles.avatar}
           />

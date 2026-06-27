@@ -19,7 +19,7 @@ interface FeedItem {
   desc?: string; // in case you fall back to formik desc
 }
 
-export default function FeedClient({ userId }) {
+export default function FeedClient({ userId }: { userId: string | undefined }) {
   // 2. Type your state array as FeedItem[] instead of never[]
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,7 +44,7 @@ export default function FeedClient({ userId }) {
               data.img ||
               "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
             newsUpdate: data.newsUpdate || data.desc || "",
-            userId:data.userId || ""
+            userId: data.userId || "",
           };
 
           initialItems.push(singlePost);
@@ -138,7 +138,7 @@ export default function FeedClient({ userId }) {
                       <div className="text-slate-500 text-xs">Contributor</div>
                     </div>
                   </div>
-                
+
                   {userId == item.userId && (
                     <button
                       onClick={(e) => {

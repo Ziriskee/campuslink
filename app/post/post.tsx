@@ -1,7 +1,7 @@
 "use client";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
-import { FaPaperPlane } from "react-icons/fa";
+import { FaPaperPlane as FaPaperPlaneIcon } from "react-icons/fa";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import Typography from "@mui/material/Typography";
@@ -10,8 +10,27 @@ import { useState } from "react";
 import { Box } from "@mui/material";
 import { CiCircleCheck } from "react-icons/ci";
 
-const style = {
-  position: "absolute",
+// Define strict types for the component Props
+interface PostClientProps {
+  session: {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      id?: string | null;
+    };
+  } | null;
+}
+
+// Define types for Formik form fields
+interface FormValues {
+  title: string;
+  desc: string;
+  cat: string;
+}
+
+const modalStyle = {
+  position: "absolute" as const,
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
@@ -19,13 +38,16 @@ const style = {
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
+  borderRadius: "16px", // Smooth curved border to match Tailwind styles
+  outline: "none",
 };
 
-export default function PostClient({ session }) {
-  const [open, setOpen] = useState(false);
+export default function PostClient({ session }: PostClientProps) {
+  const [open, setOpen] = useState<boolean>(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const iv = {
+
+  const iv: FormValues = {
     title: "",
     desc: "",
     cat: "",
@@ -55,20 +77,28 @@ export default function PostClient({ session }) {
         <Formik
           initialValues={iv}
           validationSchema={validationObject}
-          onSubmit={async (values) => {
-            console.log("Submitting Post Data:", values);
-            const docRef = await addDoc(collection(db, "news"), {
-              author: session?.user?.name,
-              timestamp: new Date().toLocaleDateString(),
-              img: session?.user?.image,
-              userId: session?.user?.id,
-              ...values,
-            });
-            // console.log("Document written with ID: ", docRef);
-            handleOpen();
+          onSubmit={async (values, { resetForm }) => {
+            try {
+              console.log("Submitting Post Data:", values);
+              await addDoc(collection(db, "news"), {
+                author: session?.user?.name || "Anonymous",
+                timestamp: new Date().toLocaleDateString(),
+                img:
+                  session?.user?.image ||
+                  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+                userId: session?.user?.id || "",
+                title: values.title,
+                desc: values.desc,
+                cat: values.cat,
+              });
+
+              handleOpen();
+              resetForm(); // Clears input boxes after successfully posting
+            } catch (error) {
+              console.error("Firestore database submission error:", error);
+            }
           }}
         >
-          {/* Added layout control to Form */}
           <Form className="flex flex-col gap-6">
             {/* Title Field */}
             <div className="flex flex-col gap-2">
@@ -124,7 +154,6 @@ export default function PostClient({ session }) {
                   <option value="campus-news">Campus News</option>
                   <option value="teaching-methods">Teaching Methods</option>
                 </Field>
-                {/* Custom select arrow graphic indicator */}
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                   <svg
                     className="fill-current h-4 w-4"
@@ -142,32 +171,37 @@ export default function PostClient({ session }) {
               />
             </div>
 
-            {/* Submit Button with React Icon */}
+            {/* Submit Button */}
             <button
               type="submit"
               className="mt-2 inline-flex items-center justify-center gap-2 w-full bg-[#121358] text-white px-5 py-3 rounded-lg font-semibold hover:bg-[#1b1d7d] active:scale-[0.99] transition-all cursor-pointer shadow-sm shadow-[#121358]/10"
             >
-              <FaPaperPlane className="text-sm transform rotate-0" />
+              <FaPaperPlaneIcon className="text-sm" />
               <span>Make Post</span>
             </button>
           </Form>
         </Formik>
       </div>
 
+      {/* Success Modal */}
       <Modal
         open={open}
         onClose={handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            <div className="flex items-center justify-center">
-              <CiCircleCheck className=" text-7xl text-green-700 text-center" />
-            </div>
-          </Typography>
-          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            Your post has been submitted
+        <Box sx={modalStyle}>
+          <div
+            id="modal-modal-title"
+            className="flex items-center justify-center mb-2"
+          >
+            <CiCircleCheck className="text-7xl text-green-600" />
+          </div>
+          <Typography
+            id="modal-modal-description"
+            className="text-center font-semibold text-slate-700 text-lg"
+          >
+            Your post has been submitted successfully!
           </Typography>
         </Box>
       </Modal>

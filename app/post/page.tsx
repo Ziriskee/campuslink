@@ -13,7 +13,7 @@ export default async function Post() {
 
   return (
     <main className="min-h-dvh">
-      <PostClient session={session}/>
+      <PostClient session ={session}/>
     </main>
   );
 }
